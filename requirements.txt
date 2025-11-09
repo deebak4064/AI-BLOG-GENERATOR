@@ -1,6 +1,28 @@
-Flask>=2.0.0
-requests>=2.25.1
-python-dotenv>=0.19.0
-jinja2>=3.0.0
-# pandas
-# gunicorn
+# Core runtime dependencies
+Flask>=2.0,<3
+python-dotenv>=0.21.0
+requests>=2.28.0
+Markdown>=3.3.0         # used as "import markdown as _markdown"
+beautifulsoup4>=4.9.0   # used for HTML parsing when rendering PDF/DOCX
+python-docx>=0.8.11     # used to generate DOCX files
+reportlab>=3.5.0        # fallback PDF renderer when WeasyPrint is not available
+
+# Optional/Provider-specific clients
+# google-genai is optional; only required if you want to use the google genai client instead of raw REST for Gemini
+google-genai>=0.1.0 ; extra == "gemini"  
+
+# Optional higher-fidelity HTML->PDF (preferred if available)
+# NOTE: WeasyPrint requires system dependencies (Cairo, Pango, GDK-PixBuf).
+# On Debian/Ubuntu: apt install libpango1.0-0 libgdk-pixbuf2.0-0 libcairo2 libffi-dev shared-mime-info
+weasyprint>=54.0 ; extra == "weasy"
+
+# Helpful extras for parsing/rendering and deployment
+lxml>=4.9.0             # faster/parsing alternative for BeautifulSoup (optional)
+gunicorn>=20.1.0        # production WSGI server
+# (Optional) If you plan to use Perplexity or other LLM SDKs, add their clients here:
+# perplexity-client>=<version>
+
+# Development / testing (optional)
+pytest>=7.0.0
+black>=23.1.0
+isort>=5.0.0
