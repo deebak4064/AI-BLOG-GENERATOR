@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Blog Generator</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="navbar">
+        <div class="container">
+            <h1><i class="fas fa-robot"></i> AI Blog Generator</h1>
+            <nav>
+                <a href="/" class="active">Generate</a>
+                <a href="/blog/json">View Blogs</a>
+            </nav>
+        </div>
+    </div>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                        <button class="close-btn" onclick="this.parentElement.style.display='none';">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Create New Blog Posts</h2>
+                <p class="subtitle">Enter one blog title per line. Add optional details after a | symbol.</p>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="blogForm">
+                    <div class="form-group">
+                        <label for="blog_inputs">Blog Titles & Details:</label>
+                        <textarea 
+                            name="blog_inputs" 
+                            id="blog_inputs" 
+                            rows="8" 
+                            placeholder="Intro to Python | Focus on decorators&#10;How to Use Docker in ML"
+                            required></textarea>
+                    </div>
+                    
+                    <!-- Removed save format options from input; downloads are available after generation -->
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-magic"></i> Generate Blogs
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="help-section">
+            <h3><i class="fas fa-info-circle"></i> Quick Tips</h3>
+            <ul>
+                <li>Each line will generate a separate blog post</li>
+                <li>Use the | symbol to add specific details or requirements</li>
+                <li>Example: "Python Async Programming | Include code examples"</li>
+            </ul>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 AI Blog Generator - Made with AI & Human Curation</p>
+            <p> Credit : Deebak kumar k</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('blogForm').onsubmit = function() {
+            const btn = this.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            return true;
+        };
+    </script>
+</body>
+</html>

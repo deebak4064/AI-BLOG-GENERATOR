@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generated Blogs</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="navbar">
+        <div class="container">
+            <h1><i class="fas fa-robot"></i> AI Blog Generator</h1>
+            <nav>
+                <a href="/">Generate</a>
+                <a href="/blog/json" class="active">View Blogs</a>
+            </nav>
+        </div>
+    </div>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                        <button class="close-btn" onclick="this.parentElement.style.display='none';">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="blog-header">
+            <h2>Generated Blog Articles</h2>
+            {% if total_blogs %}
+                <p class="subtitle">Showing {{ blogs|length }} of {{ total_blogs }} articles</p>
+            {% endif %}
+            <!-- Download-all removed; individual download button will prompt for format -->
+        </div>
+
+        {% if blogs %}
+            {% for blog in blogs %}
+                <article class="blog-card">
+                    <header class="blog-card-header">
+                        <h2>{{ blog.title }}</h2>
+                        <div class="download-wrap">
+                            <button class="btn download-btn" type="button" onclick="toggleDownloadMenu({{ blog._idx }})">Download <i class="fas fa-chevron-down"></i></button>
+                            <div id="dl-menu-{{ blog._idx }}" class="download-menu" aria-hidden="true">
+                                <a href="#" data-url="{{ url_for('download_blog', fmt='pdf', idx=blog._idx) }}" data-fname="{{ blog.filename_base }}.pdf" onclick="openConfirmModalFromEl(this); return false;">PDF</a>
+                                <a href="#" data-url="{{ url_for('download_blog', fmt='docx', idx=blog._idx) }}" data-fname="{{ blog.filename_base }}.docx" onclick="openConfirmModalFromEl(this); return false;">DOCX</a>
+                                <a href="#" data-url="{{ url_for('download_blog', fmt='html', idx=blog._idx) }}" data-fname="{{ blog.filename_base }}.html" onclick="openConfirmModalFromEl(this); return false;">HTML</a>
+                                <a href="#" data-url="{{ url_for('download_blog', fmt='md', idx=blog._idx) }}" data-fname="{{ blog.filename_base }}.md" onclick="openConfirmModalFromEl(this); return false;">Markdown</a>
+                                <a href="#" data-url="{{ url_for('download_blog', fmt='txt', idx=blog._idx) }}" data-fname="{{ blog.filename_base }}.txt" onclick="openConfirmModalFromEl(this); return false;">Text</a>
+                                <a href="#" data-url="{{ url_for('download_blog', fmt='json', idx=blog._idx) }}" data-fname="{{ blog.filename_base }}.json" onclick="openConfirmModalFromEl(this); return false;">JSON</a>
+                                <a href="#" data-url="{{ url_for('download_blog', fmt='csv', idx=blog._idx) }}" data-fname="{{ blog.filename_base }}.csv" onclick="openConfirmModalFromEl(this); return false;">CSV</a>
+                            </div>
+                        </div>
+                        {% if blog.date %}
+                            <time datetime="{{ blog.date }}">
+                                <i class="far fa-calendar-alt"></i> {{ blog.date }}
+                            </time>
+                        {% endif %}
+                    </header>
+
+                    {% if blog.details %}
+                        <div class="blog-details">
+                            <i class="fas fa-info-circle"></i> {{ blog.details }}
+                        </div>
+                    {% endif %}
+
+                    <div class="blog-content">
+                        {{ blog.body_html | safe }}
+                    </div>
+                </article>
+            {% endfor %}
+
+            {% if total_pages and total_pages > 1 %}
+                <div class="pagination">
+                    {% if page > 1 %}
+                        <a href="{{ url_for('show_blog', format=format, page=page-1) }}" class="btn btn-secondary">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </a>
+                    {% endif %}
+                    
+                    <span class="page-info">Page {{ page }} of {{ total_pages }}</span>
+                    
+                    {% if page < total_pages %}
+                        <a href="{{ url_for('show_blog', format=format, page=page+1) }}" class="btn btn-secondary">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-file-alt"></i>
+                <p>No blog posts found</p>
+                <a href="/" class="btn btn-primary">Generate New Blogs</a>
+            </div>
+        {% endif %}
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 AI Blog Generator. Powered by Perplexity AI.</p>
+        </div>
+    </footer>
+    <!-- Download confirm modal -->
+    <div id="download-confirm-modal" class="modal" style="display:none;">
+        <div class="modal-backdrop" onclick="closeConfirmModal()"></div>
+        <div class="modal-panel">
+            <h3 id="modal-title">Confirm Download</h3>
+            <p id="modal-message">Download this article?</p>
+            <div style="margin-top:6px;">
+                <label for="modal-filename-input" style="display:block;font-size:0.9rem;margin-bottom:6px;">Filename to download (include extension)</label>
+                <input id="modal-filename-input" type="text" class="input" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;" />
+            </div>
+            <div style="margin:8px 0;">
+                <label style="font-size:0.9rem;"><input type="checkbox" id="modal-open-newtab" style="margin-right:6px;"> Open in new tab</label>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+                <button id="modal-confirm-btn" class="btn btn-primary">Download</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleDownloadMenu(idx){
+            const id = 'dl-menu-' + idx;
+            const el = document.getElementById(id);
+            if(!el) return;
+            // close any other open menus
+            document.querySelectorAll('.download-menu').forEach(m => { if(m.id !== id) m.style.display='none'; });
+            el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+        }
+
+        // close menus when clicking outside
+        document.addEventListener('click', function(e){
+            if(!e.target.closest('.download-wrap')){
+                document.querySelectorAll('.download-menu').forEach(m => m.style.display='none');
+            }
+        });
+
+        let _pendingDownloadUrl = null;
+        function openConfirmModalFromEl(el){
+            if(!el) return;
+            const url = el.dataset.url;
+            const fname = el.dataset.fname || '';
+            openConfirmModal(url, fname);
+        }
+
+        function openConfirmModal(url, suggestedFilename){
+            _pendingDownloadUrl = url;
+            const msg = document.getElementById('modal-message');
+            msg.textContent = `Download this article?`;
+            const fnameInput = document.getElementById('modal-filename-input');
+            if(fnameInput){
+                fnameInput.value = suggestedFilename || '';
+            }
+            // reset checkbox
+            const chk = document.getElementById('modal-open-newtab');
+            if(chk) chk.checked = false;
+
+            const confirmBtn = document.getElementById('modal-confirm-btn');
+            confirmBtn.onclick = function(){
+                const openNew = document.getElementById('modal-open-newtab') && document.getElementById('modal-open-newtab').checked;
+                const fnameInput = document.getElementById('modal-filename-input');
+                let fname = fnameInput && fnameInput.value ? fnameInput.value.trim() : '';
+                // If user provided a filename, append it as download_name parameter
+                let urlToOpen = _pendingDownloadUrl;
+                if(fname){
+                    const sep = urlToOpen.includes('?') ? '&' : '?';
+                    urlToOpen = urlToOpen + sep + 'download_name=' + encodeURIComponent(fname);
+                }
+
+                if(openNew){
+                    window.open(urlToOpen, '_blank');
+                } else {
+                    window.location.href = urlToOpen;
+                }
+                closeConfirmModal();
+            };
+            document.getElementById('download-confirm-modal').style.display = 'block';
+        }
+
+        function closeConfirmModal(){
+            _pendingDownloadUrl = null;
+            const fnameEl = document.getElementById('modal-filename');
+            if(fnameEl) fnameEl.textContent = '';
+            const chk = document.getElementById('modal-open-newtab');
+            if(chk) chk.checked = false;
+            document.getElementById('download-confirm-modal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
