@@ -32,7 +32,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # Endpoints and model defaults (can be overridden via env)
 PERPLEXITY_API_URL = os.getenv("PERPLEXITY_API_URL", "https://api.perplexity.ai/chat/completions")
-GEMINI_API_URL = os.getenv("GEMINI_API_URL", "https://generativelanguage.googleapis.com/v1beta2/models")
+GEMINI_API_URL = os.getenv("GEMINI_API_URL", "https://generativelanguage.googleapis.com/v1beta2/models/gemini-2.5-flash:generateText?key={GEMINI_API_KEY}")
 MODEL = os.getenv("LLM_MODEL", "sonar-medium-online")
 BLOGS_PER_PAGE = int(os.getenv("BLOGS_PER_PAGE", "5"))
 
