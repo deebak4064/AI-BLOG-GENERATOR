@@ -6,6 +6,7 @@ Markdown>=3.3.0         # used as "import markdown as _markdown"
 beautifulsoup4>=4.9.0   # used for HTML parsing when rendering PDF/DOCX
 python-docx>=0.8.11     # used to generate DOCX files
 reportlab>=3.5.0        # fallback PDF renderer when WeasyPrint is not available
+fpdf
 
 # Optional/Provider-specific clients
 # google-genai is optional; only required if you want to use the google genai client instead of raw REST for Gemini
