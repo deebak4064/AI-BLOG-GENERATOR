@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Blog History</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .center-box {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 1.5rem;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 1.5rem;
+        }
+        .center-box h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+            color: var(--primary-color);
+        }
+        .blog-history-list {
+            list-style: disc;
+            padding-left: 1.5rem;
+            margin: 0;
+            flex: 2;
+        }
+        .blog-history-list li {
+            margin-bottom: 1rem;
+        }
+        .blog-title-link {
+            font-size: 1.2rem;
+            color: black;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .blog-title-link:hover {
+            text-decoration: underline;
+        }
+        .blog-date {
+            display: block;
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.2rem;
+        }
+        .filter-box {
+            flex: 1;
+            padding: 1rem;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        .filter-box h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        .filter-box label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: #333;
+        }
+        .filter-box select,
+        .filter-box button {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .filter-box button {
+            background: var(--primary-color);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        .filter-box button:hover {
+            background: var(--primary-hover);
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="navbar-content">
+            <h1><i class="fas fa-robot"></i> AI Blog Generator</h1>
+            <nav class="navbar-nav">
+                <a href="/">Generate</a>
+                <a href="/blog" class="active">View Blogs</a>
+            </nav>
+            <div class="navbar-auth">
+                {% if current_user.is_authenticated %}
+                    <span class="user-info">{{ current_user.username }}</span>
+                    <a href="/logout" class="btn btn-secondary btn-sm">Logout</a>
+                {% else %}
+                    <a href="/login" class="btn btn-primary btn-sm">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <main class="main-content">
+        <div class="container">
+            <div class="center-box">
+                <div>
+                    <h2>Your Blog History</h2>
+                    {% if blogs %}
+                        <ul class="blog-history-list">
+                            {% for blog in blogs %}
+                                <li data-category="{{ blog.category }}">
+                                    <a class="blog-title-link" href="/blog/{{ blog.id }}">{{ blog.title }}</a>
+                                    <span class="blog-date">{{ blog.created_at }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-file-alt"></i>
+                            <p>No blog history found.</p>
+                            <a href="/" class="btn btn-primary">Generate New Blogs</a>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="filter-box">
+                    <h3>Filter Blogs</h3>
+
+                    <label for="filter-time">Filter by Time</label>
+                    <select id="filter-time" onchange="updateTimeFilterOptions()">
+                        <option value="recent">Recent</option>
+                        <option value="month">Month</option>
+                        <option value="year">Year</option>
+                    </select>
+
+                    <div id="time-options" style="margin-top: 1rem; display: none;">
+                        <label for="filter-month" style="display: none;" id="month-label">Select Month</label>
+                        <select id="filter-month" style="display: none;">
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+
+                        <label for="filter-year" style="display: none;" id="year-label">Select Year</label>
+                        <select id="filter-year" style="display: none;">
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                            <option value="2022">2022</option>
+                        </select>
+                    </div>
+
+                    <label for="filter-category">Filter by Category</label>
+                    <select id="filter-category">
+                        <option value="all">All Categories</option>
+                        <option value="tech">Tech</option>
+                        <option value="lifestyle">Lifestyle</option>
+                        <option value="education">Education</option>
+                        <option value="health">Health</option>
+                        <option value="finance">Finance</option>
+                        <option value="travel">Travel</option>
+                        <option value="food">Food</option>
+                        <option value="sports">Sports</option>
+                        <option value="entertainment">Entertainment</option>
+                    </select>
+
+                    <button onclick="applyFilters()">Apply Filters</button>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 AI Blog Generator - Made with AI & Human Curation</p>
+            <p> Credit : Deebak kumar k</p>
+        </div>
+    </footer>
+
+    <script>
+function updateTimeFilterOptions() {
+    const timeFilter = document.getElementById('filter-time').value;
+    const monthLabel = document.getElementById('month-label');
+    const monthSelect = document.getElementById('filter-month');
+    const yearLabel = document.getElementById('year-label');
+    const yearSelect = document.getElementById('filter-year');
+
+    if (timeFilter === 'month') {
+        monthLabel.style.display = 'block';
+        monthSelect.style.display = 'block';
+        yearLabel.style.display = 'none';
+        yearSelect.style.display = 'none';
+    } else if (timeFilter === 'year') {
+        monthLabel.style.display = 'none';
+        monthSelect.style.display = 'none';
+        yearLabel.style.display = 'block';
+        yearSelect.style.display = 'block';
+    } else {
+        monthLabel.style.display = 'none';
+        monthSelect.style.display = 'none';
+        yearLabel.style.display = 'none';
+        yearSelect.style.display = 'none';
+    }
+}
+
+function applyFilters() {
+    const timeFilter = document.getElementById('filter-time').value;
+    const monthFilter = document.getElementById('filter-month').value;
+    const yearFilter = document.getElementById('filter-year').value;
+    const categoryFilter = document.getElementById('filter-category').value;
+    const blogs = document.querySelectorAll('.blog-history-list li');
+
+    const currentDate = new Date();
+    blogs.forEach(blog => {
+        const blogDate = new Date(blog.querySelector('.blog-date').textContent.trim());
+        const blogCategory = blog.getAttribute('data-category');
+
+        let showByTime = true;
+        if (timeFilter === 'month') {
+            showByTime = blogDate.getMonth() + 1 == monthFilter && blogDate.getFullYear() == currentDate.getFullYear();
+        } else if (timeFilter === 'year') {
+            showByTime = blogDate.getFullYear() == yearFilter;
+        }
+
+        let showByCategory = categoryFilter === 'all' || blogCategory === categoryFilter;
+
+        if (showByTime && showByCategory) {
+            blog.style.display = '';
+        } else {
+            blog.style.display = 'none';
+        }
+    });
+}
+    </script>
+</body>
+</html>

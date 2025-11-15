@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generated Blogs</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- Fixed Navbar -->
+    <div class="navbar">
+        <div class="navbar-content">
+            <!-- Hamburger Menu (left-most) -->
+            <button id="category-toggle" class="hamburger-menu" title="Toggle Categories">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <!-- Logo and Title (next to hamburger) -->
+            <h1><i class="fas fa-robot"></i> AI Blog Generator</h1>
+            <!-- Navigation (center-left) -->
+            <nav class="navbar-nav">
+                <a href="/">Generate</a>
+                <a href="/blog" class="active">View Blogs</a>
+            </nav>
+            <!-- Login Button (right-most) -->
+            <div class="navbar-auth">
+                {% if current_user.is_authenticated %}
+                    <span class="user-info">{{ current_user.username }}</span>
+                    <a href="/logout" class="btn btn-secondary btn-sm">Logout</a>
+                {% else %}
+                    <a href="/login" class="btn btn-primary btn-sm">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar with Trending Categories -->
+    <aside id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3>Trending Categories</h3>
+        </div>
+        <ul class="categories-list">
+            <li><button class="category-btn" data-category="Tech"><img src="static/icons/tech.svg" alt="Tech Icon" width="18" height="18"> Tech</button></li>
+            <li><button class="category-btn" data-category="Beauty"><img src="static/icons/beauty.svg" alt="Beauty Icon" width="18" height="18"> Beauty</button></li>
+            <li><button class="category-btn" data-category="Education"><img src="static/icons/education.svg" alt="Education Icon" width="18" height="18"> Education</button></li>
+            <li><button class="category-btn" data-category="Gaming"><img src="static/icons/gaming.png" alt="Gaming Icon" width="18" height="18"> Gaming</button></li>
+            <li><button class="category-btn" data-category="Health"><img src="static/icons/health.png" alt="Health Icon" width="18" height="18"> Health</button></li>
+            <li><button class="category-btn" data-category="Travel"><img src="static/icons/travel.png" alt="Travel Icon" width="18" height="18"> Travel</button></li>
+            <li><button class="category-btn" data-category="Lifestyle"><img src="static/icons/lifestyle.png" alt="Lifestyle Icon" width="18" height="18"> Lifestyle</button></li>
+            <li><button class="category-btn" data-category="Business"><img src="static/icons/business.png" alt="Business Icon" width="18" height="18"> Business</button></li>
+        </ul>
+    </aside>
+
+    <!-- Category suggestion popover (positioned near clicked category) -->
+    <div id="category-popover" class="category-popover" style="display:none;" aria-hidden="true">
+        <div id="category-popover-content" class="category-popover-content"></div>
+    </div>
+
+    <main class="main-content">
+        <div class="blog-view-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                        <button class="close-btn" onclick="this.parentElement.style.display='none';">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="blog-header">
+            {% if is_single_view %}
+                <a href="/blog" class="btn btn-secondary" style="margin-bottom: 1rem;">
+                    <i class="fas fa-arrow-left"></i> Back to History
+                </a>
+            {% endif %}
+            <h2>Generated Blog Articles</h2>
+            {% if total_blogs %}
+                <p class="subtitle">Showing {{ blogs|length }} of {{ total_blogs }} articles</p>
+            {% endif %}
+        </div>
+
+        {% if blogs %}
+            <div class="blog-view-wrapper">
+                <!-- Left column: Article in paper format -->
+                <article class="blog-article-column">
+                    {% for blog in blogs %}
+                        <div class="blog-card blog-paper">
+                            <header class="blog-card-header">
+                                <!-- Hide input title - show only AI-generated title from body -->
+                                <!-- <h2 id="blog-title-{{ blog._idx }}">{{ blog.title }}</h2> -->
+                                <div class="download-wrap">
+                                    <button class="btn download-btn" type="button" onclick="toggleDownloadMenu('{{ blog._idx }}')">Download <i class="fas fa-chevron-down"></i></button>
+                                    <div id="dl-menu-{{ blog._idx }}" class="download-menu" aria-hidden="true">
+                                        <a href="#" data-url="{{ url_for('download_blog', fmt='pdf', idx=blog._idx) }}" data-fname="{{ blog.filename_base }}.pdf" onclick="openConfirmModalFromEl(this); return false;">PDF</a>
+                                        <a href="#" data-url="{{ url_for('download_blog', fmt='docx', idx=blog._idx) }}" data-fname="{{ blog.filename_base }}.docx" onclick="openConfirmModalFromEl(this); return false;">DOCX</a>
+                                        <a href="#" data-url="{{ url_for('download_blog', fmt='html', idx=blog._idx) }}" data-fname="{{ blog.filename_base }}.html" onclick="openConfirmModalFromEl(this); return false;">HTML</a>
+                                        <a href="#" data-url="{{ url_for('download_blog', fmt='md', idx=blog._idx) }}" data-fname="{{ blog.filename_base }}.md" onclick="openConfirmModalFromEl(this); return false;">Markdown</a>
+                                        <a href="#" data-url="{{ url_for('download_blog', fmt='txt', idx=blog._idx) }}" data-fname="{{ blog.filename_base }}.txt" onclick="openConfirmModalFromEl(this); return false;">Text</a>
+                                        <a href="#" data-url="{{ url_for('download_blog', fmt='json', idx=blog._idx) }}" data-fname="{{ blog.filename_base }}.json" onclick="openConfirmModalFromEl(this); return false;">JSON</a>
+                                        <a href="#" data-url="{{ url_for('download_blog', fmt='csv', idx=blog._idx) }}" data-fname="{{ blog.filename_base }}.csv" onclick="openConfirmModalFromEl(this); return false;">CSV</a>
+                                    </div>
+                                </div>
+                                {% if blog.date %}
+                                    <time datetime="{{ blog.date }}">
+                                        <i class="far fa-calendar-alt"></i> {{ blog.date }}
+                                    </time>
+                                {% endif %}
+                            </header>
+
+                            {% if blog.details %}
+                                <!-- Hide input details - show only AI-generated content -->
+                                <!-- <div class="blog-details">
+                                    <i class="fas fa-info-circle"></i> {{ blog.details }}
+                                </div> -->
+                            {% endif %}
+
+                            <div class="blog-content" id="blog-content-{{ blog._idx }}">
+                                {{ blog.body_html | safe }}
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    {% if total_pages and total_pages > 1 %}
+                        <div class="pagination">
+                            {% if page > 1 %}
+                                <a href="{{ url_for('show_blog', format=format, page=page-1) }}" class="btn btn-secondary">
+                                    <i class="fas fa-chevron-left"></i> Previous
+                                </a>
+                            {% endif %}
+                            
+                            <span class="page-info">Page {{ page }} of {{ total_pages }}</span>
+                            
+                            {% if page < total_pages %}
+                                <a href="{{ url_for('show_blog', format=format, page=page+1) }}" class="btn btn-secondary">
+                                    Next <i class="fas fa-chevron-right"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </article>
+
+                <!-- Right column: Chat Assistant -->
+                <aside class="chat-assistant-column">
+                    <div class="chat-assistant-panel">
+                        <div class="chat-header">
+                            <h3><i class="fas fa-comments"></i> Edit with AI</h3>
+                        </div>
+                        
+                        <div class="chat-messages" id="chat-messages">
+                            <div class="chat-message chat-info">
+                                <p>Select text from the article to edit it using AI. The selected text will appear here.</p>
+                            </div>
+                        </div>
+
+                        <div class="chat-input-wrapper">
+                            <textarea id="chat-input" class="chat-input" placeholder="Describe changes or ask for rephrasing..." rows="4"></textarea>
+                            <button id="use-selection-btn" class="btn btn-secondary btn-sm" style="width: 100%; margin-top: 8px;" onclick="useSelectedText()">
+                                <i class="fas fa-copy"></i> Use Selection
+                            </button>
+                            <button id="send-btn" class="btn btn-primary" style="width: 100%; margin-top: 8px;" onclick="sendChatMessage()">
+                                <i class="fas fa-paper-plane"></i> Send
+                            </button>
+                        </div>
+
+                        <div class="apply-changes-wrapper">
+                            <button id="revert-changes-btn" class="btn btn-warning" style="width: 100%; margin-top: 8px;" onclick="revertLastChange()" disabled>
+                                <i class="fas fa-undo"></i> Revert Last Change
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-file-alt"></i>
+                <p>No blog posts found</p>
+                <a href="/" class="btn btn-primary">Generate New Blogs</a>
+            </div>
+        {% endif %}
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 AI Blog Generator - Made with AI & Human Curation</p>
+            <p> Credit : Deebak kumar k</p>
+        </div>
+    </footer>
+    <!-- Download confirm modal -->
+    <div id="download-confirm-modal" class="modal" style="display:none;">
+        <div class="modal-backdrop" onclick="closeConfirmModal()"></div>
+        <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <h3 id="modal-title">Confirm Download</h3>
+            <p id="modal-message">Download this article?</p>
+            <div style="margin-top:8px;">
+                <label for="modal-filename-input" style="display:block;font-size:0.92rem;margin-bottom:8px;font-weight:500;">Filename to download (include extension)</label>
+                <input id="modal-filename-input" type="text" class="input" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:0.95rem;" />
+            </div>
+            <div style="margin:12px 0;">
+                <label style="font-size:0.9rem;cursor:pointer;"><input type="checkbox" id="modal-open-newtab" style="margin-right:8px;"> Open in new tab</label>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+                <button id="modal-confirm-btn" class="btn btn-primary">Download</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== TRENDING TOPICS DATABASE =====
+        const trendingTopics = {
+            'Tech': ['AI and Machine Learning Trends 2025', 'Web Development Best Practices', 'Cloud Computing Security', 'Cybersecurity for Startups', 'Python vs JavaScript Comparison', 'DevOps Pipeline Optimization', 'Blockchain Technology Explained', 'Docker and Containerization Guide'],
+            'Beauty': ['Skincare Routine for Beginners', 'Natural Beauty Products Guide', 'Makeup Tips for Sensitive Skin', 'Anti-Aging Secrets from Experts', 'Hair Care Tips for Healthy Hair', 'Cruelty-Free Cosmetics Review', 'Wellness and Beauty Connection', 'Nail Art Design Trends'],
+            'Education': ['Online Learning Effectiveness', 'Study Techniques That Work', 'Educational Apps Review', 'Teaching Methods for Digital Age', 'Student Productivity Hacks', 'Online Courses Worth Taking', 'Critical Thinking Development', 'Language Learning Tips'],
+            'Gaming': ['Top Gaming Trends 2025', 'Best PC Games of the Year', 'Gaming Setups Guide', 'Esports Career Opportunities', 'Indie Game Reviews', 'Mobile Gaming Tips', 'VR Gaming Experience', 'Gaming Streaming Guide'],
+            'Health': ['Fitness Goals Achievement Guide', 'Mental Health Awareness', 'Nutrition and Diet Tips', 'Workout Routines at Home', 'Sleep Quality Improvement', 'Stress Management Techniques', 'Preventive Health Measures', 'Yoga and Meditation Benefits'],
+            'Travel': ['Budget Travel Tips', 'Hidden Gems Destinations', 'Travel Packing Guide', 'Best Time to Travel', 'Travel Safety Essentials', 'Adventure Travel Planning', 'Cultural Experience Guide', 'Solo Travel Guide'],
+            'Lifestyle': ['Minimalist Living Guide', 'Work-Life Balance Tips', 'Daily Habits for Success', 'Personal Growth Strategies', 'Home Organization Ideas', 'Sustainable Living Tips', 'Time Management Mastery', 'Digital Detox Guide'],
+            'Business': ['Startup Business Ideas', 'Entrepreneurship Guide', 'Marketing Strategies 2025', 'Leadership Skills Development', 'Financial Management Tips', 'Business Automation', 'Remote Work Best Practices', 'Employee Retention Strategies']
+        };
+
+        // ===== SIDEBAR CATEGORY TOGGLE =====
+        const categoryToggle = document.getElementById('category-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const popover = document.getElementById('category-popover');
+        const popoverContent = document.getElementById('category-popover-content');
+
+        function setBodySidebar(open) {
+            if (open) document.body.classList.add('sidebar-open');
+            else document.body.classList.remove('sidebar-open');
+        }
+
+        categoryToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sidebar.classList.toggle('open');
+            setBodySidebar(sidebar.classList.contains('open'));
+            popover.style.display = 'none';
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#sidebar') && !e.target.closest('#category-popover') && !e.target.closest('#category-toggle')) {
+                sidebar.classList.remove('open');
+                setBodySidebar(false);
+                popover.style.display = 'none';
+            }
+        });
+
+        // Category button click handler -> show popover adjacent to clicked button
+        const categoryBtns = document.querySelectorAll('.category-btn');
+        categoryBtns.forEach(btn => {
+            btn.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                const category = btn.dataset.category;
+                const topics = trendingTopics[category] || [];
+                popoverContent.innerHTML = `<div class="topics-header"><h4>${category}</h4></div><div class="topics-list">${topics.map(t => `<button class="topic-btn" data-topic="${t.replace(/"/g,'&quot;')}">${t}</button>`).join('')}</div>`;
+                const btnRect = btn.getBoundingClientRect();
+                const top = btnRect.top + window.scrollY;
+                const left = btnRect.right + 10 + window.scrollX;
+                popover.style.top = top + 'px';
+                popover.style.left = left + 'px';
+                popover.style.display = 'block';
+                popover.querySelectorAll('.topic-btn').forEach(tbtn => {
+                    tbtn.addEventListener('click', () => {
+                        const topic = tbtn.dataset.topic;
+                        navigator.clipboard.writeText(topic).then(() => {
+                            alert('Topic copied to clipboard!');
+                        });
+                        popover.style.display = 'none';
+                    });
+                });
+            });
+        });
+
+        // Rotate trending topics every 5 minutes
+        function rotateTrendingTopics() {
+            fetch('/api/trending-topics')
+                .then(response => response.json())
+                .then(newTopics => {
+                    // Update the trendingTopics with new random topics
+                    Object.assign(trendingTopics, newTopics);
+                    console.log('Trending topics updated');
+                })
+                .catch(error => console.error('Failed to update trending topics:', error));
+        }
+
+        // Rotate every 5 minutes (300000 milliseconds)
+        setInterval(rotateTrendingTopics, 300000);
+
+        // ===== CHAT ASSISTANT FUNCTIONALITY =====
+        let selectedText = '';
+        let selectedElement = null;
+        const chatInput = document.getElementById('chat-input');
+        const chatMessages = document.getElementById('chat-messages');
+        const useSelectionBtn = document.getElementById('use-selection-btn');
+        const sendBtn = document.getElementById('send-btn');
+        const revertBtn = document.getElementById('revert-changes-btn');
+        let lastAssistantResponse = '';
+        
+        // Track changes for revert functionality
+        let changeHistory = [];
+        
+        // Save blog content changes to server
+        function saveBlogChanges() {
+            const blogContent = document.querySelector('.blog-content');
+            if (!blogContent) return;
+            
+            // Get the blog index from the id
+            const blogContentId = blogContent.id; // e.g., "blog-content-0"
+            const idx = parseInt(blogContentId.replace('blog-content-', '')) || 0;
+            
+            const updatedHTML = blogContent.innerHTML;
+            
+            fetch('/api/save-blog-content', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    idx: idx,
+                    body_html: updatedHTML
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success && data.error) {
+                    console.error('Save error:', data.error);
+                }
+            })
+            .catch(error => console.error('Save failed:', error));
+        }
+
+        // Detect text selection in article (but not in chat box)
+        document.addEventListener('mouseup', function() {
+            const selection = window.getSelection();
+            const chatPanel = document.querySelector('.chat-assistant-panel');
+            
+            // Check if selection is within the chat panel
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const selectedNode = range.commonAncestorContainer;
+                if (chatPanel && chatPanel.contains(selectedNode)) {
+                    // Selection is in chat box, ignore it
+                    return;
+                }
+            }
+            
+            selectedText = selection.toString().trim();
+            selectedElement = selection.anchorNode?.parentElement;
+            
+            if (selectedText.length > 0) {
+                useSelectionBtn.disabled = false;
+                useSelectionBtn.style.opacity = '1';
+                
+                // Highlight the selected text visually
+                if (selectedElement) {
+                    selectedElement.style.backgroundColor = '#fff3cd';
+                    selectedElement.style.transition = 'background-color 0.3s';
+                }
+            } else {
+                useSelectionBtn.disabled = true;
+                useSelectionBtn.style.opacity = '0.5';
+                if (selectedElement) {
+                    selectedElement.style.backgroundColor = '';
+                }
+            }
+        });
+
+        // Use Selection button: add selected text to chat input
+        function useSelectedText() {
+            if (selectedText) {
+                chatInput.value = selectedText;
+                chatInput.focus();
+                chatInput.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Clear selection
+        function clearSelection() {
+            selectedText = '';
+            selectedElement = null;
+            useSelectionBtn.disabled = true;
+            useSelectionBtn.style.opacity = '0.5';
+            if (selectedElement) {
+                selectedElement.style.backgroundColor = '';
+            }
+        }
+
+        // Real LLM Integration for Chat
+        async function callLLM(prompt) {
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: prompt })
+                });
+                if (!response.ok) throw new Error('LLM API error');
+                const data = await response.json();
+                return data.response || 'Unable to process your request.';
+            } catch (error) {
+                console.error('LLM Error:', error);
+                return 'Error processing your request. Please try again.';
+            }
+        }
+
+        // Send Chat Message
+        function sendChatMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+            
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.className = 'chat-message chat-user';
+            userMsgDiv.textContent = message;
+            chatMessages.appendChild(userMsgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'chat-message chat-info';
+            loadingDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating response...';
+            loadingDiv.id = 'loading-indicator';
+            chatMessages.appendChild(loadingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            callLLM(message).then(llmResponse => {
+                const loadingInd = document.getElementById('loading-indicator');
+                if (loadingInd) loadingInd.remove();
+                
+                const assistantMsgDiv = document.createElement('div');
+                assistantMsgDiv.className = 'chat-message chat-assistant';
+                
+                // Parse numbered options from response
+                const options = parseOptions(llmResponse);
+                
+                if (options.length > 1) {
+                    // Multiple options - display with copy buttons
+                    const optionsHtml = options.map((opt, idx) => `
+                        <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-left: 3px solid #007bff; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 200px;">
+                                <strong style="color: #007bff; font-size: 13px;">Option ${idx + 1}:</strong><br>
+                                <span style="font-size: 14px;">${escapeHtml(opt)}</span>
+                            </div>
+                            <button class="btn btn-sm btn-primary" style="flex-shrink: 0; margin: 0; white-space: nowrap; font-size: 12px; padding: 6px 12px; font-weight: 600;" onclick="copyAndApply('${escapeHtml(opt)}')">Use This</button>
+                        </div>
+                    `).join('');
+                    assistantMsgDiv.innerHTML = `<div style="font-size: 13px; margin-bottom: 12px; font-weight: 500; color: #333;">Select an option to replace your text:</div>${optionsHtml}`;
+                    lastAssistantResponse = ''; // Don't set single response for multiple options
+                } else {
+                    // Single response - display with "Use This" button
+                    assistantMsgDiv.innerHTML = `
+                        <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-left: 3px solid #007bff; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 200px;">
+                                <span style="font-size: 14px;">${escapeHtml(llmResponse)}</span>
+                            </div>
+                            <button class="btn btn-sm btn-primary" style="flex-shrink: 0; margin: 0; white-space: nowrap; font-size: 12px; padding: 6px 12px; font-weight: 600;" onclick="copyAndApply('${escapeHtml(llmResponse)}')">Use This</button>
+                        </div>
+                    `;
+                    lastAssistantResponse = llmResponse;
+                }
+                
+                chatMessages.appendChild(assistantMsgDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            });
+
+            chatInput.value = '';
+        }
+
+        // Parse numbered options from response (e.g., "1. Option 1\n2. Option 2")
+        function parseOptions(text) {
+            const lines = text.split('\n');
+            const options = [];
+            
+            for (let line of lines) {
+                line = line.trim();
+                // Match numbered items like "1. text" or "1. **text**" or "1: text"
+                const match = line.match(/^\d+[\.\:]\s*(.+)$/);
+                if (match) {
+                    let option = match[1].trim();
+                    // Remove markdown bold/italic markers
+                    option = option.replace(/\*{1,2}(.+?)\*{1,2}/g, '$1');
+                    option = option.replace(/_(.+?)_/g, '$1');
+                    option = option.trim();
+                    if (option.length > 0) {
+                        options.push(option);
+                    }
+                }
+            }
+            
+            // If no numbered options found, return single response
+            return options.length > 0 ? options : [text];
+        }
+
+        // Escape HTML special characters
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Copy selected option and apply it
+        function copyAndApply(option) {
+            if (!selectedText) {
+                alert('Please select text from the article first.');
+                return;
+            }
+            
+            const blogContent = document.querySelector('.blog-content');
+            if (!blogContent) {
+                alert('Could not find blog content.');
+                return;
+            }
+            
+            const walker = document.createTreeWalker(
+                blogContent,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
+            
+            let textNode;
+            let found = false;
+            let attempt = 0;
+            const maxAttempts = 5000;
+            
+            // First pass: Try exact match
+            walker.currentNode = walker.root;
+            while (textNode = walker.nextNode()) {
+                attempt++;
+                if (attempt > maxAttempts) break;
+                
+                if (textNode.nodeValue && textNode.nodeValue.includes(selectedText)) {
+                    textNode.nodeValue = textNode.nodeValue.replace(selectedText, option);
+                    found = true;
+                    break;
+                }
+            }
+            
+            // Second pass: If not found for large paragraphs, try fuzzy matching (trimmed)
+            if (!found && selectedText.length > 30) {
+                const trimmedSelected = selectedText.trim();
+                attempt = 0;
+                walker.currentNode = walker.root;
+                
+                while (textNode = walker.nextNode()) {
+                    attempt++;
+                    if (attempt > maxAttempts) break;
+                    
+                    if (textNode.nodeValue) {
+                        const trimmedNode = textNode.nodeValue.trim();
+                        // Check if paragraph contains most of the selected text
+                        if (trimmedNode.includes(trimmedSelected.substring(0, Math.min(50, trimmedSelected.length)))) {
+                            const newValue = textNode.nodeValue.replace(trimmedSelected, option);
+                            textNode.nodeValue = newValue;
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // Third pass: Join consecutive text nodes for large paragraph matching
+            if (!found && selectedText.length > 50) {
+                attempt = 0;
+                walker.currentNode = walker.root;
+                let joinedText = '';
+                let firstNode = null;
+                let nodeList = [];
+                
+                // Collect all text nodes
+                let allNodes = [];
+                while (textNode = walker.nextNode()) {
+                    allNodes.push(textNode);
+                }
+                
+                // Find the sequence that contains our selected text
+                for (let i = 0; i < allNodes.length && attempt < maxAttempts; i++) {
+                    attempt++;
+                    joinedText += allNodes[i].nodeValue;
+                    if (joinedText.includes(selectedText)) {
+                        allNodes[i].nodeValue = joinedText.replace(selectedText, option);
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (found) {
+                // Track the change for reverting
+                changeHistory.push({
+                    original: selectedText,
+                    replacement: option
+                });
+                
+                // Enable revert button
+                revertBtn.disabled = false;
+                revertBtn.style.opacity = '1';
+                
+                // Save changes to the server
+                saveBlogChanges();
+                
+                showSuccessMessage('✓ Text replaced successfully!');
+                clearSelection();
+                chatInput.value = '';
+                lastAssistantResponse = '';
+            } else {
+                alert('Could not find the selected text to replace.');
+            }
+        }
+
+        // Revert Last Change button: undo the last applied change
+        function revertLastChange() {
+            if (changeHistory.length === 0) {
+                alert('No changes to revert.');
+                return;
+            }
+            
+            const lastChange = changeHistory.pop();
+            const blogContent = document.querySelector('.blog-content');
+            if (!blogContent) {
+                alert('Could not find blog content.');
+                return;
+            }
+            
+            const walker = document.createTreeWalker(
+                blogContent,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
+            
+            let textNode;
+            let found = false;
+            let attempt = 0;
+            const maxAttempts = 5000;
+            
+            // Try to find and revert the replacement
+            walker.currentNode = walker.root;
+            while (textNode = walker.nextNode()) {
+                attempt++;
+                if (attempt > maxAttempts) break;
+                
+                if (textNode.nodeValue && textNode.nodeValue.includes(lastChange.replacement)) {
+                    textNode.nodeValue = textNode.nodeValue.replace(lastChange.replacement, lastChange.original);
+                    found = true;
+                    break;
+                }
+            }
+            
+            // Second pass: try trimmed matching for larger text
+            if (!found && lastChange.replacement.length > 30) {
+                const trimmedReplacement = lastChange.replacement.trim();
+                attempt = 0;
+                walker.currentNode = walker.root;
+                
+                while (textNode = walker.nextNode()) {
+                    attempt++;
+                    if (attempt > maxAttempts) break;
+                    
+                    if (textNode.nodeValue) {
+                        const trimmedNode = textNode.nodeValue.trim();
+                        if (trimmedNode.includes(trimmedReplacement.substring(0, Math.min(50, trimmedReplacement.length)))) {
+                            const newValue = textNode.nodeValue.replace(trimmedReplacement, lastChange.original);
+                            textNode.nodeValue = newValue;
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if (found) {
+                showSuccessMessage('✓ Change reverted successfully!');
+                
+                // Save the reverted changes to server
+                saveBlogChanges();
+                
+                // Disable revert button if no more changes
+                if (changeHistory.length === 0) {
+                    revertBtn.disabled = true;
+                    revertBtn.style.opacity = '0.5';
+                }
+            } else {
+                // If not found, still remove from history since it was already undone
+                if (changeHistory.length === 0) {
+                    revertBtn.disabled = true;
+                    revertBtn.style.opacity = '0.5';
+                }
+                alert('Could not find the changed text to revert. The text may have been modified further.');
+            }
+        }
+
+        // Show success message in chat
+        function showSuccessMessage(message) {
+            const successMsg = document.createElement('div');
+            successMsg.className = 'chat-message chat-info';
+            successMsg.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            chatMessages.appendChild(successMsg);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // ===== DOWNLOAD MENU FUNCTIONALITY =====
+        function toggleDownloadMenu(idx){
+            const id = 'dl-menu-' + idx;
+            const el = document.getElementById(id);
+            if(!el) return;
+            document.querySelectorAll('.download-menu').forEach(m => { if(m.id !== id) m.style.display='none'; });
+            el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+        }
+
+        document.addEventListener('click', function(e){
+            if(!e.target.closest('.download-wrap')){
+                document.querySelectorAll('.download-menu').forEach(m => m.style.display='none');
+            }
+        });
+
+        let _pendingDownloadUrl = null;
+        function openConfirmModalFromEl(el){
+            if(!el) return;
+            const url = el.dataset.url;
+            const fname = el.dataset.fname || '';
+            openConfirmModal(url, fname);
+        }
+
+        function openConfirmModal(url, suggestedFilename){
+            _pendingDownloadUrl = url;
+            const msg = document.getElementById('modal-message');
+            msg.textContent = `Download this article?`;
+            const fnameInput = document.getElementById('modal-filename-input');
+            if(fnameInput){
+                fnameInput.value = suggestedFilename || '';
+            }
+            const chk = document.getElementById('modal-open-newtab');
+            if(chk) chk.checked = false;
+
+            const confirmBtn = document.getElementById('modal-confirm-btn');
+            confirmBtn.onclick = function(){
+                const openNew = document.getElementById('modal-open-newtab') && document.getElementById('modal-open-newtab').checked;
+                const fnameInput = document.getElementById('modal-filename-input');
+                let fname = fnameInput && fnameInput.value ? fnameInput.value.trim() : '';
+                if (fname) {
+                    const dlUrl = _pendingDownloadUrl + '?download_name=' + encodeURIComponent(fname);
+                    if (openNew) {
+                        window.open(dlUrl, '_blank');
+                    } else {
+                        window.location.href = dlUrl;
+                    }
+                } else {
+                    if (openNew) {
+                        window.open(_pendingDownloadUrl, '_blank');
+                    } else {
+                        window.location.href = _pendingDownloadUrl;
+                    }
+                }
+                closeConfirmModal();
+            };
+            document.getElementById('download-confirm-modal').style.display = 'flex';
+        }
+
+        function closeConfirmModal(){
+            _pendingDownloadUrl = null;
+            const chk = document.getElementById('modal-open-newtab');
+            if(chk) chk.checked = false;
+            document.getElementById('download-confirm-modal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
