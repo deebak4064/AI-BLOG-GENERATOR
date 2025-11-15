@@ -9,6 +9,9 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+    <!-- Hidden Current User ID for JavaScript -->
+    <span id="current-user-id" style="display:none;">{% if current_user.is_authenticated %}{{ current_user.id }}{% else %}guest{% endif %}</span>
+    
     <!-- Fixed Navbar -->
     <div class="navbar">
         <div class="navbar-content">
@@ -223,6 +226,15 @@
             'Lifestyle': ['Minimalist Living Guide', 'Work-Life Balance Tips', 'Daily Habits for Success', 'Personal Growth Strategies', 'Home Organization Ideas', 'Sustainable Living Tips', 'Time Management Mastery', 'Digital Detox Guide'],
             'Business': ['Startup Business Ideas', 'Entrepreneurship Guide', 'Marketing Strategies 2025', 'Leadership Skills Development', 'Financial Management Tips', 'Business Automation', 'Remote Work Best Practices', 'Employee Retention Strategies']
         };
+
+        // ===== GET CURRENT USER =====
+        function getCurrentUser() {
+            const userIdElement = document.getElementById('current-user-id');
+            if (userIdElement) {
+                return userIdElement.textContent;
+            }
+            return 'guest';
+        }
 
         // ===== SIDEBAR CATEGORY TOGGLE =====
         const categoryToggle = document.getElementById('category-toggle');
@@ -742,6 +754,21 @@
 
             const confirmBtn = document.getElementById('modal-confirm-btn');
             confirmBtn.onclick = function(){
+                // Increment download counter
+                const statsKey = `stats_user_${getCurrentUser()}`;
+                let stats = {
+                    totalBlogs: parseInt(localStorage.getItem(`${statsKey}_totalBlogs`)) || 0,
+                    totalDownloads: parseInt(localStorage.getItem(`${statsKey}_totalDownloads`)) || 0
+                };
+                stats.totalDownloads++;
+                localStorage.setItem(`${statsKey}_totalDownloads`, stats.totalDownloads);
+                
+                // Update UI if on homepage
+                const downloadElement = document.getElementById('total-downloads');
+                if (downloadElement) {
+                    downloadElement.textContent = stats.totalDownloads;
+                }
+                
                 const openNew = document.getElementById('modal-open-newtab') && document.getElementById('modal-open-newtab').checked;
                 const fnameInput = document.getElementById('modal-filename-input');
                 let fname = fnameInput && fnameInput.value ? fnameInput.value.trim() : '';
