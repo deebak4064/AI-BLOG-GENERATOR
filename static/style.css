@@ -843,6 +843,15 @@ textarea:focus, select:focus {
     background-color: #5a6268;
 }
 
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
 .btn:disabled {
     opacity: 0.7;
     cursor: not-allowed;
