@@ -28,7 +28,7 @@ load_dotenv(override=True)
 # LLM provider configuration - Using Gemini only
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 MODEL = os.getenv("LLM_MODEL", "gemini-2.5-flash")
-BLOGS_PER_PAGE = int(os.getenv("BLOGS_PER_PAGE", "5"))
+BLOGS_PER_PAGE = int(os.getenv("BLOGS_PER_PAGE", "1000"))
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", os.urandom(24))
@@ -489,6 +489,38 @@ def view_blog(blog_id):
     except Exception as e:
         flash(f"Unable to load blog: {e}", "error")
         return redirect(url_for('my_blogs'))
+
+@app.route("/api/delete-blog/<int:blog_id>", methods=["DELETE"])
+def delete_blog(blog_id):
+    """Delete a single blog by ID."""
+    if not current_user or not getattr(current_user, 'is_authenticated', False):
+        return {'error': 'Unauthorized'}, 401
+
+    try:
+        blog = UserBlog.query.filter_by(id=blog_id, user_id=current_user.id).first()
+        if not blog:
+            return {'error': 'Blog not found'}, 404
+        
+        db.session.delete(blog)
+        db.session.commit()
+        return {'success': True, 'message': 'Blog deleted successfully'}, 200
+    except Exception as e:
+        db.session.rollback()
+        return {'error': str(e)}, 500
+
+@app.route("/api/clear-all-blogs", methods=["DELETE"])
+def clear_all_blogs():
+    """Delete all blogs for the current user."""
+    if not current_user or not getattr(current_user, 'is_authenticated', False):
+        return {'error': 'Unauthorized'}, 401
+
+    try:
+        UserBlog.query.filter_by(user_id=current_user.id).delete()
+        db.session.commit()
+        return {'success': True, 'message': 'All blogs cleared successfully'}, 200
+    except Exception as e:
+        db.session.rollback()
+        return {'error': str(e)}, 500
 
 @app.errorhandler(Exception)
 def handle_error(e):
