@@ -25,7 +25,7 @@ class AttributionTracker:
             "AI Blog Generator",
             "deebak4064",
             "github.com/deebak4064/AI-BLOG-GENERATOR",
-            "Deepak Kumar"
+            "Deebak Kumar"
         ]
         return hashlib.md5("".join(signature_items).encode()).hexdigest()
     
@@ -56,7 +56,7 @@ class AttributionTracker:
             with open('README.md', 'r', encoding='utf-8') as f:
                 content = f.read().lower()
                 attribution_keywords = [
-                    'deepak kumar',
+                    'deebak kumar',
                     'deebak4064',
                     'github.com/deebak4064',
                     'original author'
@@ -120,7 +120,7 @@ class AttributionTracker:
 ║                   ⚠️  ATTRIBUTION WARNING  ⚠️                   ║
 ╠════════════════════════════════════════════════════════════════╣
 ║ This application is based on AI Blog Generator                 ║
-║ Original Author: Deepak Kumar (deebak4064)                     ║
+║ Original Author: Deebak Kumar (deebak4064)                     ║
 ║ Repository: https://github.com/deebak4064/AI-BLOG-GENERATOR    ║
 ║                                                                ║
 ║ MISSING ATTRIBUTION for:                                       ║

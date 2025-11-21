@@ -65,7 +65,7 @@ with app.app_context():
     
     # Attribution check and notice
     print("\n" + "="*70)
-    print("AI Blog Generator - Created by Deepak Kumar")
+    print("AI Blog Generator - Created by Deebak Kumar")
     print("Repository: https://github.com/deebak4064/AI-BLOG-GENERATOR")
     print("License: MIT with Attribution Requirement")
     print("If you use or modify this code, please give credit to the original author.")

@@ -86,14 +86,14 @@ If you create a derivative work:
 2. Link to the original repository
 3. List all significant modifications
 4. Include the original LICENSE file
-5. Give credit to Deepak Kumar in all documentation
+5. Give credit to Deebak Kumar in all documentation
 
 ## Examples of Proper Attribution
 
 ### In Your Project README
 ```markdown
 This project is based on [AI Blog Generator](https://github.com/deebak4064/AI-BLOG-GENERATOR) 
-by [Deepak Kumar](https://github.com/deebak4064).
+by [Deebak Kumar](https://github.com/deebak4064).
 
 **Modifications made:** Added support for OpenAI API, improved UI styling, added database caching.
 ```
@@ -103,7 +103,7 @@ by [Deepak Kumar](https://github.com/deebak4064).
 """
 Modified version of AI Blog Generator
 Original: https://github.com/deebak4064/AI-BLOG-GENERATOR
-Original Author: Deepak Kumar
+Original Author: Deebak Kumar
 
 Modifications:
 - Added OpenAI API support
@@ -117,7 +117,7 @@ Modifications:
 <footer>
     Powered by <a href="https://github.com/deebak4064/AI-BLOG-GENERATOR">
         AI Blog Generator</a> by 
-    <a href="https://github.com/deebak4064">Deepak Kumar</a>
+    <a href="https://github.com/deebak4064">Deebak Kumar</a>
 </footer>
 ```
 
