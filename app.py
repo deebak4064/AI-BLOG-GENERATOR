@@ -29,6 +29,7 @@ import io
 import time
 from uuid import uuid4
 from models import db, User, UserBlog, UserStats
+from attribution_tracker import AttributionTracker
 
 # Force load the .env file (allow override so local .env takes precedence here)
 load_dotenv(override=True)
@@ -40,6 +41,9 @@ BLOGS_PER_PAGE = int(os.getenv("BLOGS_PER_PAGE", "1000"))
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", os.urandom(24))
+
+# Initialize Attribution Tracker
+attribution_tracker = AttributionTracker(app)
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blogs_app.db'
@@ -59,13 +63,26 @@ def load_user(user_id):
 with app.app_context():
     db.create_all()
     
-    # Attribution notice
+    # Attribution check and notice
     print("\n" + "="*70)
     print("AI Blog Generator - Created by Deepak Kumar")
     print("Repository: https://github.com/deebak4064/AI-BLOG-GENERATOR")
     print("License: MIT with Attribution Requirement")
     print("If you use or modify this code, please give credit to the original author.")
-    print("="*70 + "\n")
+    print("="*70)
+    
+    # Check attribution compliance
+    is_attributed, missing = attribution_tracker.check_attribution()
+    if not is_attributed:
+        warning = attribution_tracker.log_deployment({
+            'host': os.getenv('HOSTNAME', 'localhost'),
+            'attributed': False,
+            'missing': missing
+        })
+        if warning:
+            print(warning)
+    else:
+        print("✓ Attribution properly configured\n")
     
     # Initialize stats for existing users (migration)
     try:
@@ -1307,5 +1324,18 @@ def logout():
     flash("You have been logged out", "success")
     return redirect(url_for("index"))
 
+
+# Attribution Compliance Endpoint
+@app.route("/api/attribution-check")
+def attribution_check():
+    """
+    Check if this instance is properly attributed
+    Returns compliance report
+    """
+    report = attribution_tracker.generate_report()
+    return report
+
+
 if __name__ == "__main__":
     app.run(debug=True)
+
