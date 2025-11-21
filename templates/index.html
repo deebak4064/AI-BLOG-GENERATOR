@@ -170,12 +170,29 @@
         // ===== STATS TRACKING =====
         // Get current user identifier
         const currentUser = '{% if current_user.is_authenticated %}{{ current_user.id }}{% else %}guest{% endif %}';
-        const statsKey = `stats_user_${currentUser}`;
         
         const stats = {
-            totalBlogs: parseInt(localStorage.getItem(`${statsKey}_totalBlogs`)) || 0,
-            totalDownloads: parseInt(localStorage.getItem(`${statsKey}_totalDownloads`)) || 0,
+            totalBlogs: 0,
+            totalDownloads: 0,
         };
+
+        // Fetch stats from server
+        function fetchAndUpdateStats() {
+            fetch('/api/user-stats')
+                .then(response => response.json())
+                .then(data => {
+                    stats.totalBlogs = data.total_blogs || 0;
+                    stats.totalDownloads = data.total_downloads || 0;
+                    updateDashboard();
+                })
+                .catch(error => {
+                    console.error('Error fetching stats:', error);
+                    // Fallback to 0
+                    stats.totalBlogs = 0;
+                    stats.totalDownloads = 0;
+                    updateDashboard();
+                });
+        }
 
         // Initialize dashboard display
         function updateDashboard() {
@@ -184,10 +201,14 @@
         }
 
         function saveStats() {
-            localStorage.setItem(`${statsKey}_totalBlogs`, stats.totalBlogs);
-            localStorage.setItem(`${statsKey}_totalDownloads`, stats.totalDownloads);
+            // Stats are now saved to database server-side, no need for localStorage
             updateDashboard();
         }
+
+        // Fetch stats on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchAndUpdateStats();
+        });
 
         // ===== QUICK START TEMPLATES =====
         document.addEventListener('DOMContentLoaded', () => {
@@ -379,23 +400,21 @@
         // Form submission handler
         document.getElementById('blogForm').onsubmit = function() {
             const btn = this.querySelector('button[type="submit"]');
-            const textareaValue = document.getElementById('blog_inputs').value;
-            const blogCount = textareaValue.trim().split('\n').filter(line => line.trim()).length;
-            
-            stats.totalBlogs += blogCount;
-            saveStats();
-            
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            
+            // Note: Stats will be updated server-side during blog generation
+            // and will be fetched on next page load
             return true;
         };
 
-        // Track downloads
+        // Track downloads - stats updated server-side when download endpoint is called
         document.addEventListener('click', (e) => {
             const downloadBtn = e.target.closest('a[download], button[data-format]');
             if (downloadBtn) {
-                stats.totalDownloads++;
-                saveStats();
+                // Stats will be updated server-side
+                // Refresh stats after a delay
+                setTimeout(fetchAndUpdateStats, 1000);
             }
         });
     </script>

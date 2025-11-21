@@ -38,6 +38,7 @@ class UserBlog(db.Model):
     body = db.Column(db.Text, nullable=True)
     body_html = db.Column(db.Text, nullable=True)
     filename_base = db.Column(db.String(160), nullable=True)
+    category = db.Column(db.String(50), nullable=True, default='General', index=True)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp(), index=True)
 
     user = db.relationship('User', backref=db.backref('blogs', lazy='dynamic'))
@@ -55,3 +56,19 @@ class UserBlog(db.Model):
             'filename_base': fb,
             'date': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None
         }
+
+
+class UserStats(db.Model):
+    """Per-user statistics tracking."""
+    __tablename__ = 'user_stats'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True, nullable=False, index=True)
+    total_blogs_generated = db.Column(db.Integer, default=0)
+    total_downloads = db.Column(db.Integer, default=0)
+    updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
+
+    user = db.relationship('User', backref=db.backref('stats', uselist=False))
+
+    def __repr__(self):
+        return f'<UserStats user_id={self.user_id}, blogs={self.total_blogs_generated}, downloads={self.total_downloads}>'

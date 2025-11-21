@@ -81,9 +81,6 @@
                     <a href="/blog" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> Back to History
                     </a>
-                    <button class="btn btn-danger btn-sm" onclick="deleteBlogWithConfirm({{ blogs[0].id if blogs else 'null' }})">
-                        <i class="fas fa-trash"></i> Delete This
-                    </button>
                 </div>
             {% else %}
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -93,11 +90,6 @@
                             <p class="subtitle" style="margin: 0.25rem 0 0 0;">Total: {{ total_blogs }} articles</p>
                         {% endif %}
                     </div>
-                    {% if total_blogs > 0 %}
-                        <button class="btn btn-danger" onclick="clearAllBlogsWithConfirm()">
-                            <i class="fas fa-trash-alt"></i> Clear All History
-                        </button>
-                    {% endif %}
                 </div>
             {% endif %}
         </div>
@@ -119,13 +111,14 @@
                                         </button>
                                     {% endif %}
                                     <div id="dl-menu-{{ blog._idx }}" class="download-menu" aria-hidden="true">
-                                        <a href="#" data-url="{{ url_for('download_blog', fmt='pdf', idx=blog._idx) }}" data-fname="{{ blog.filename_base }}.pdf" onclick="openConfirmModalFromEl(this); return false;">PDF</a>
-                                        <a href="#" data-url="{{ url_for('download_blog', fmt='docx', idx=blog._idx) }}" data-fname="{{ blog.filename_base }}.docx" onclick="openConfirmModalFromEl(this); return false;">DOCX</a>
-                                        <a href="#" data-url="{{ url_for('download_blog', fmt='html', idx=blog._idx) }}" data-fname="{{ blog.filename_base }}.html" onclick="openConfirmModalFromEl(this); return false;">HTML</a>
-                                        <a href="#" data-url="{{ url_for('download_blog', fmt='md', idx=blog._idx) }}" data-fname="{{ blog.filename_base }}.md" onclick="openConfirmModalFromEl(this); return false;">Markdown</a>
-                                        <a href="#" data-url="{{ url_for('download_blog', fmt='txt', idx=blog._idx) }}" data-fname="{{ blog.filename_base }}.txt" onclick="openConfirmModalFromEl(this); return false;">Text</a>
-                                        <a href="#" data-url="{{ url_for('download_blog', fmt='json', idx=blog._idx) }}" data-fname="{{ blog.filename_base }}.json" onclick="openConfirmModalFromEl(this); return false;">JSON</a>
-                                        <a href="#" data-url="{{ url_for('download_blog', fmt='csv', idx=blog._idx) }}" data-fname="{{ blog.filename_base }}.csv" onclick="openConfirmModalFromEl(this); return false;">CSV</a>
+                                        {% set download_idx = blog.id if blog.id else blog._idx %}
+                                        <a href="#" data-url="{{ url_for('download_blog', fmt='pdf', idx=download_idx) }}" data-fname="{{ blog.filename_base }}.pdf" onclick="openConfirmModalFromEl(this); return false;">PDF</a>
+                                        <a href="#" data-url="{{ url_for('download_blog', fmt='docx', idx=download_idx) }}" data-fname="{{ blog.filename_base }}.docx" onclick="openConfirmModalFromEl(this); return false;">DOCX</a>
+                                        <a href="#" data-url="{{ url_for('download_blog', fmt='html', idx=download_idx) }}" data-fname="{{ blog.filename_base }}.html" onclick="openConfirmModalFromEl(this); return false;">HTML</a>
+                                        <a href="#" data-url="{{ url_for('download_blog', fmt='md', idx=download_idx) }}" data-fname="{{ blog.filename_base }}.md" onclick="openConfirmModalFromEl(this); return false;">Markdown</a>
+                                        <a href="#" data-url="{{ url_for('download_blog', fmt='txt', idx=download_idx) }}" data-fname="{{ blog.filename_base }}.txt" onclick="openConfirmModalFromEl(this); return false;">Text</a>
+                                        <a href="#" data-url="{{ url_for('download_blog', fmt='json', idx=download_idx) }}" data-fname="{{ blog.filename_base }}.json" onclick="openConfirmModalFromEl(this); return false;">JSON</a>
+                                        <a href="#" data-url="{{ url_for('download_blog', fmt='csv', idx=download_idx) }}" data-fname="{{ blog.filename_base }}.csv" onclick="openConfirmModalFromEl(this); return false;">CSV</a>
                                     </div>
                                 </div>
                                 {% if blog.date %}
@@ -774,20 +767,8 @@
 
             const confirmBtn = document.getElementById('modal-confirm-btn');
             confirmBtn.onclick = function(){
-                // Increment download counter
-                const statsKey = `stats_user_${getCurrentUser()}`;
-                let stats = {
-                    totalBlogs: parseInt(localStorage.getItem(`${statsKey}_totalBlogs`)) || 0,
-                    totalDownloads: parseInt(localStorage.getItem(`${statsKey}_totalDownloads`)) || 0
-                };
-                stats.totalDownloads++;
-                localStorage.setItem(`${statsKey}_totalDownloads`, stats.totalDownloads);
-                
-                // Update UI if on homepage
-                const downloadElement = document.getElementById('total-downloads');
-                if (downloadElement) {
-                    downloadElement.textContent = stats.totalDownloads;
-                }
+                // Note: Download counter is now tracked server-side
+                // No need for client-side localStorage tracking
                 
                 const openNew = document.getElementById('modal-open-newtab') && document.getElementById('modal-open-newtab').checked;
                 const fnameInput = document.getElementById('modal-filename-input');

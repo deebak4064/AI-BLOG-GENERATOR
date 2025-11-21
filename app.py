@@ -20,7 +20,7 @@ import re
 import io
 import time
 from uuid import uuid4
-from models import db, User, UserBlog
+from models import db, User, UserBlog, UserStats
 
 # Force load the .env file (allow override so local .env takes precedence here)
 load_dotenv(override=True)
@@ -50,6 +50,56 @@ def load_user(user_id):
 # Create database tables
 with app.app_context():
     db.create_all()
+    
+    # Initialize stats for existing users (migration)
+    try:
+        users = User.query.all()
+        for user in users:
+            # Check if stats already exist
+            existing_stats = UserStats.query.filter_by(user_id=user.id).first()
+            if not existing_stats:
+                # Count existing blogs for this user
+                blog_count = UserBlog.query.filter_by(user_id=user.id).count()
+                # Create stats with current blog count
+                stats = UserStats(
+                    user_id=user.id,
+                    total_blogs_generated=blog_count,
+                    total_downloads=0
+                )
+                db.session.add(stats)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error initializing stats: {e}")
+
+def detect_category(title, details=""):
+    """Detect category from blog title and details."""
+    # Category keywords mapping
+    categories = {
+        'Tech': ['python', 'javascript', 'coding', 'programming', 'development', 'web', 'cloud', 'ai', 'machine learning', 'api', 'database', 'devops', 'cybersecurity', 'blockchain', 'docker', 'react', 'node', 'software', 'code', 'algorithm', 'data science', 'computer'],
+        'Beauty': ['skincare', 'makeup', 'beauty', 'cosmetics', 'hair', 'nail', 'skincare routine', 'anti-aging', 'cruelty-free', 'wellness'],
+        'Education': ['learning', 'study', 'education', 'course', 'student', 'teaching', 'school', 'university', 'academic', 'language', 'skill'],
+        'Gaming': ['gaming', 'game', 'esports', 'video game', 'console', 'pc game', 'mobile game', 'gaming setup', 'streaming', 'vr'],
+        'Health': ['fitness', 'workout', 'health', 'diet', 'nutrition', 'exercise', 'mental health', 'yoga', 'meditation', 'wellness', 'sleep'],
+        'Travel': ['travel', 'trip', 'destination', 'hotel', 'vacation', 'tourism', 'adventure', 'backpack', 'tour', 'explore'],
+        'Lifestyle': ['lifestyle', 'minimalist', 'living', 'habits', 'daily routine', 'personal growth', 'productivity', 'home', 'organization', 'digital detox'],
+        'Business': ['business', 'startup', 'entrepreneurship', 'marketing', 'leadership', 'finance', 'management', 'strategy', 'sales', 'remote work']
+    }
+    
+    # Combine title and details for analysis
+    text = (title + " " + details).lower()
+    
+    # Find which category has the most matches
+    max_matches = 0
+    detected_category = 'General'
+    
+    for category, keywords in categories.items():
+        matches = sum(1 for keyword in keywords if keyword in text)
+        if matches > max_matches:
+            max_matches = matches
+            detected_category = category
+    
+    return detected_category
 
 def generate_blog(title, details="", api_key=None):
     """Generate a blog using Gemini API.
@@ -326,27 +376,34 @@ def index():
                             if current_user and getattr(current_user, 'is_authenticated', False):
                                 for b_save in blogs:
                                     try:
+                                        # Detect category from title and details
+                                        category = detect_category(b_save.get('title', ''), b_save.get('details', ''))
                                         ub = UserBlog(
                                             user_id=current_user.id,
                                             title=b_save.get('title') or '',
                                             details=b_save.get('details') or '',
                                             body=b_save.get('body') or '',
                                             body_html=b_save.get('body_html') or '',
-                                            filename_base=b_save.get('filename_base') or None
+                                            filename_base=b_save.get('filename_base') or None,
+                                            category=category
                                         )
                                         db.session.add(ub)
                                     except Exception:
                                         pass
                                 try:
                                     db.session.commit()
-                                except Exception:
+                                except Exception as e:
                                     db.session.rollback()
-                    return render_template("blog_list.html", blogs=blogs)
+                                    print(f"Error saving blogs: {e}")
+                    return render_template("blog_list.html", blogs=blogs, total_blogs=len(blogs))
             except IOError as e:
                 flash(f"Error saving blogs: {str(e)}", "error")
-                return render_template("blog_list.html", blogs=blogs)
+                return render_template("blog_list.html", blogs=blogs, total_blogs=len(blogs))
 
         except Exception as e:
+            print(f"Blog generation error: {type(e).__name__}: {str(e)}")
+            import traceback
+            traceback.print_exc()
             flash(f"An unexpected error occurred: {str(e)}", "error")
             return redirect(url_for("index"))
 
@@ -452,7 +509,7 @@ def my_blogs():
             page = 1
 
         items = q.offset((page - 1) * BLOGS_PER_PAGE).limit(BLOGS_PER_PAGE).all()
-        blogs = [{'id': b.id, 'title': b.title, 'created_at': b.created_at.strftime('%Y-%m-%d %H:%M:%S') if b.created_at else None} for b in items]
+        blogs = [{'id': b.id, 'title': b.title, 'category': b.category or 'General', 'created_at': b.created_at.strftime('%Y-%m-%d %H:%M:%S') if b.created_at else None} for b in items]
 
         return render_template(
             "blog_history.html",
@@ -617,24 +674,46 @@ def _sanitize_blog_content(blog: dict) -> dict:
 
 @app.route('/download/<fmt>/<int:idx>')
 def download_blog(fmt, idx):
-    # Load last generated blogs from server-side file (preferred) or session
-    blogs = []
-    fpath = session.get('last_blogs_file')
-    if fpath and os.path.exists(fpath):
+    """Download a blog in specified format.
+    
+    Supports both:
+    1. Session/inline blogs (idx = array index)
+    2. Database blogs (idx = UserBlog.id when user is authenticated)
+    """
+    blog = None
+    
+    # If user is authenticated, try to load from database first
+    if current_user and getattr(current_user, 'is_authenticated', False):
         try:
-            with open(fpath, 'r', encoding='utf-8') as fh:
-                blogs = json.load(fh)
+            blog_obj = UserBlog.query.filter_by(id=idx, user_id=current_user.id).first()
+            if blog_obj:
+                blog = blog_obj.to_dict()
         except Exception:
-            blogs = []
-    else:
-        # fallback to session data
+            pass
+    
+    # Fallback to session-based blogs (for inline generation)
+    if not blog:
+        blogs = []
+        fpath = session.get('last_blogs_file')
+        if fpath and os.path.exists(fpath):
+            try:
+                with open(fpath, 'r', encoding='utf-8') as fh:
+                    blogs = json.load(fh)
+            except Exception:
+                blogs = []
+        else:
+            # fallback to session data
+            try:
+                blogs = json.loads(session.get('last_blogs', '[]'))
+            except Exception:
+                blogs = []
+        
         try:
-            blogs = json.loads(session.get('last_blogs', '[]'))
+            blog = blogs[idx]
         except Exception:
-            blogs = []
-    try:
-        blog = blogs[idx]
-    except Exception:
+            pass
+    
+    if not blog:
         flash("Requested blog not found", "error")
         return redirect(url_for('index'))
 
@@ -1083,6 +1162,23 @@ def save_blog_content():
     except Exception as e:
         print(f"Save Blog Content Error: {e}")
         return json.dumps({"error": str(e)}), 500
+
+@app.route("/api/user-stats", methods=["GET"])
+def get_user_stats():
+    """Get user statistics from database."""
+    if not current_user or not getattr(current_user, 'is_authenticated', False):
+        return json.dumps({'total_blogs': 0, 'total_downloads': 0}), 200, {'Content-Type': 'application/json'}
+    
+    try:
+        # Simply count blogs from the database
+        blog_count = UserBlog.query.filter_by(user_id=current_user.id).count()
+        return json.dumps({
+            'total_blogs': blog_count,
+            'total_downloads': 0
+        }), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        print(f"Error fetching stats: {e}")
+        return json.dumps({'total_blogs': 0, 'total_downloads': 0}), 200, {'Content-Type': 'application/json'}
 
 @app.route("/api/trending-topics", methods=["GET"])
 def get_trending_topics():

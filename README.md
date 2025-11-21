@@ -75,10 +75,20 @@ The AI Blog Generator is a complete content creation solution that combines AI-p
 
 ### 👤 User Authentication
 - **Secure Registration** - Email and password-based signup
-- **Blog History** - Access all your previously generated blogs
+- **Blog History** - Access all your previously generated blogs with filtering
 - **Persistent Changes** - All edits saved to your account
 - **Session Management** - Remember me option available
 - **Database Integration** - SQLAlchemy with SQLite
+
+### 📊 Dashboard & Blog Management
+- **Statistics Dashboard** - Track total blogs generated and downloads
+- **Category Auto-Detection** - Blogs automatically categorized (Tech, Beauty, Education, Gaming, Health, Travel, Lifestyle, Business, General)
+- **Advanced Filtering** - Filter by:
+  - **Time** - Recent, Month, or Year
+  - **Category** - Filter by auto-detected blog categories
+  - **Search** - Search blogs by title
+- **Clear History** - One-click deletion of all blogs
+- **Blog Management** - Delete individual blogs or clear entire history
 
 ### 💾 Smart Data Persistence
 - **Auto-Save** - No manual save button needed
@@ -274,6 +284,29 @@ The AI Chat Assistant intelligently detects your intent:
 - Every change is logged to history
 - Revert one change at a time
 - Perfect for trying different variations
+
+### Blog History & Filtering
+
+Access all your generated blogs with intelligent filtering:
+
+**Filter Options:**
+- **Time Filter** - View Recent, This Month, or This Year
+- **Category Filter** - Auto-detected categories (Tech, Beauty, Education, Gaming, Health, Travel, Lifestyle, Business, General)
+- **Search Filter** - Find blogs by title keyword
+
+**Features:**
+- View complete blog history in a clean list
+- Each blog shows title and creation date
+- Apply multiple filters simultaneously
+- Clear entire history with one click
+- Delete individual blogs as needed
+
+**How to Use:**
+1. Go to "View Blogs" from navigation
+2. Select your filter criteria (time, category, search)
+3. Click "Apply Filters"
+4. Click blog title to view full content
+5. Use "Clear History" button to delete all blogs
 
 ### Multi-Format Export
 

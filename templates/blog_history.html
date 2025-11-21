@@ -161,21 +161,27 @@
                         </select>
                     </div>
 
+                    <label for="filter-search">Search Blogs</label>
+                    <input type="text" id="filter-search" placeholder="Search by title..." style="width: 100%; padding: 0.5rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 4px;">
+
                     <label for="filter-category">Filter by Category</label>
-                    <select id="filter-category">
+                    <select id="filter-category" style="width: 100%; padding: 0.5rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 4px;">
                         <option value="all">All Categories</option>
-                        <option value="tech">Tech</option>
-                        <option value="lifestyle">Lifestyle</option>
-                        <option value="education">Education</option>
-                        <option value="health">Health</option>
-                        <option value="finance">Finance</option>
-                        <option value="travel">Travel</option>
-                        <option value="food">Food</option>
-                        <option value="sports">Sports</option>
-                        <option value="entertainment">Entertainment</option>
+                        <option value="Tech">Tech</option>
+                        <option value="Beauty">Beauty</option>
+                        <option value="Education">Education</option>
+                        <option value="Gaming">Gaming</option>
+                        <option value="Health">Health</option>
+                        <option value="Travel">Travel</option>
+                        <option value="Lifestyle">Lifestyle</option>
+                        <option value="Business">Business</option>
+                        <option value="General">General</option>
                     </select>
 
                     <button onclick="applyFilters()">Apply Filters</button>
+                    <button style="margin-top: 1rem; width: 100%; padding: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 0.95rem;" onclick="clearAllBlogsWithConfirm()">
+                        <i class="fas fa-trash-alt"></i> Clear History
+                    </button>
                 </div>
             </div>
         </div>
@@ -215,30 +221,66 @@ function updateTimeFilterOptions() {
 
 function applyFilters() {
     const timeFilter = document.getElementById('filter-time').value;
-    const monthFilter = document.getElementById('filter-month').value;
-    const yearFilter = document.getElementById('filter-year').value;
+    const monthFilter = parseInt(document.getElementById('filter-month').value);
+    const yearFilter = parseInt(document.getElementById('filter-year').value);
+    const searchFilter = document.getElementById('filter-search').value.toLowerCase();
     const categoryFilter = document.getElementById('filter-category').value;
     const blogs = document.querySelectorAll('.blog-history-list li');
 
     const currentDate = new Date();
     blogs.forEach(blog => {
-        const blogDate = new Date(blog.querySelector('.blog-date').textContent.trim());
+        const dateText = blog.querySelector('.blog-date').textContent.trim();
+        const titleText = blog.querySelector('.blog-title-link').textContent.trim().toLowerCase();
         const blogCategory = blog.getAttribute('data-category');
-
+        
+        // Parse date format: YYYY-MM-DD HH:MM:SS
+        const dateParts = dateText.split(' ')[0].split('-');
+        const blogYear = parseInt(dateParts[0]);
+        const blogMonth = parseInt(dateParts[1]);
+        
         let showByTime = true;
         if (timeFilter === 'month') {
-            showByTime = blogDate.getMonth() + 1 == monthFilter && blogDate.getFullYear() == currentDate.getFullYear();
+            showByTime = blogMonth === monthFilter && blogYear === currentDate.getFullYear();
         } else if (timeFilter === 'year') {
-            showByTime = blogDate.getFullYear() == yearFilter;
+            showByTime = blogYear === yearFilter;
         }
 
+        let showBySearch = searchFilter === '' || titleText.includes(searchFilter);
         let showByCategory = categoryFilter === 'all' || blogCategory === categoryFilter;
 
-        if (showByTime && showByCategory) {
+        if (showByTime && showBySearch && showByCategory) {
             blog.style.display = '';
         } else {
             blog.style.display = 'none';
         }
+    });
+}
+
+function clearAllBlogsWithConfirm() {
+    if (confirm('Are you sure you want to delete ALL blogs? This will permanently remove all your blog history. This action cannot be undone.')) {
+        clearAllBlogs();
+    }
+}
+
+function clearAllBlogs() {
+    fetch('/api/clear-all-blogs', {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('All blogs deleted successfully');
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error deleting blogs');
     });
 }
     </script>
