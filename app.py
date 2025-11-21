@@ -1,3 +1,11 @@
+"""
+AI Blog Generator - Flask Application
+Created by: Deebak Kumar (deebak4064)
+Repository: https://github.com/deebak4064/AI-BLOG-GENERATOR
+License: MIT with Attribution Requirement
+Please give credit when using or modifying this code.
+"""
+
 import os
 import csv
 import json
@@ -50,6 +58,14 @@ def load_user(user_id):
 # Create database tables
 with app.app_context():
     db.create_all()
+    
+    # Attribution notice
+    print("\n" + "="*70)
+    print("AI Blog Generator - Created by Deepak Kumar")
+    print("Repository: https://github.com/deebak4064/AI-BLOG-GENERATOR")
+    print("License: MIT with Attribution Requirement")
+    print("If you use or modify this code, please give credit to the original author.")
+    print("="*70 + "\n")
     
     # Initialize stats for existing users (migration)
     try:

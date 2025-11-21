@@ -5,11 +5,13 @@
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Flask](https://img.shields.io/badge/Flask-2.0+-green.svg)](https://flask.palletsprojects.com/)
 [![Google Gemini API](https://img.shields.io/badge/Google%20Gemini-API-red.svg)](https://ai.google.dev/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT%20with%20Attribution-yellow.svg)](LICENSE)
+
+**⭐ If you use this code, please give credit to the original author!**
 
 A powerful full-stack web application that generates high-quality, AI-powered blog articles using Google's Gemini API. Create, edit, and publish professional content in seconds with an intuitive interface and advanced AI-assisted editing.
 
-[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Advanced Features](#-advanced-features) • [API Documentation](#-api-documentation) • [Deployment](#-deployment) • [Contributing](#-contributing)
+[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Advanced Features](#-advanced-features) • [API Documentation](#-api-documentation) • [Deployment](#-deployment) • [Contributing](#-contributing) • [Attribution](#-attribution-requirement)
 
 </div>
 
@@ -679,6 +681,44 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-**Made with ❤️ by Deebak Kumar K**
+## ✅ Attribution Requirement
+
+**If you use, fork, modify, or deploy this project, you MUST:**
+
+1. **Include the LICENSE file** in your project
+2. **Give credit** to the original author (Deepak Kumar) with a link to the original repository
+3. **Add a notice** in your README or footer stating: *"Based on AI Blog Generator by [Deepak Kumar](https://github.com/deebak4064/AI-BLOG-GENERATOR)"*
+4. **Document any changes** you make to the original code
+
+### How to Cite This Project
+
+**In Code Comments:**
+```python
+# Based on AI Blog Generator by Deepak Kumar
+# Repository: https://github.com/deebak4064/AI-BLOG-GENERATOR
+```
+
+**In README:**
+```markdown
+This project is based on [AI Blog Generator](https://github.com/deebak4064/AI-BLOG-GENERATOR) 
+created by [Deepak Kumar](https://github.com/deebak4064).
+```
+
+**Using BibTeX (for academic work):**
+```bibtex
+@software{kumar2024aibloggenerator,
+  title={AI Blog Generator},
+  author={Kumar, Deepak},
+  year={2024},
+  url={https://github.com/deebak4064/AI-BLOG-GENERATOR}
+}
+```
+
+**Using CFF (Citation File Format):**
+See [CITATION.cff](CITATION.cff) for structured citation information.
+
+---
+
+**Made with ❤️ by Deepak Kumar | [GitHub](https://github.com/deebak4064) | [Repository](https://github.com/deebak4064/AI-BLOG-GENERATOR)**
 
 **Star ⭐ this repo if you find it useful!**

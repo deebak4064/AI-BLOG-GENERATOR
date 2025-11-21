@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Kumar"
+    given-names: "Deepak"
+    orcid: "https://github.com/deebak4064"
+title: "AI Blog Generator"
+description: "A Flask-based web application that generates blog posts using Google Gemini AI with advanced features including blog history, filtering, categorization, and multiple export formats."
+repository-code: "https://github.com/deebak4064/AI-BLOG-GENERATOR"
+url: "https://github.com/deebak4064/AI-BLOG-GENERATOR"
+license: "MIT"
+version: "1.0.0"
+date-released: "2024-11-21"
+keywords:
+  - "blog"
+  - "generator"
+  - "ai"
+  - "gemini"
+  - "flask"
+  - "python"
